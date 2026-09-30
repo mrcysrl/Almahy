@@ -9,10 +9,11 @@ function makeOrder(overrides: Partial<Order>): Order {
     customerEmail: "ada@example.com",
     shippingAddress: "1 Main St",
     status: "paid",
+    items: [],
     totalCents: 1000,
-    createdAt: "2026-09-10T10:00:00.000Z",
     notes: "",
     giftMessage: "",
+    createdAt: "2026-09-10T10:00:00.000Z",
     ...overrides,
   };
 }
