@@ -13,11 +13,62 @@
   --font-mono: var(--font-geist-mono);
 }
 
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+body:has(dialog[open]) {
+  overflow: hidden;
+}
+
+dialog.mobile-nav {
+  opacity: 0;
+  transform: translateX(100%);
+  transition:
+    opacity 200ms ease,
+    transform 260ms cubic-bezier(0.16, 1, 0.3, 1),
+    overlay 260ms allow-discrete,
+    display 260ms allow-discrete;
+}
+
+dialog.mobile-nav[open] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@starting-style {
+  dialog.mobile-nav[open] {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+dialog.mobile-nav::backdrop {
+  background: white;
+  opacity: 0;
+  transition:
+    opacity 200ms ease,
+    overlay 260ms allow-discrete,
+    display 260ms allow-discrete;
+}
+
+dialog.mobile-nav[open]::backdrop {
+  opacity: 1;
+}
+
+@starting-style {
+  dialog.mobile-nav[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  dialog.mobile-nav,
+  dialog.mobile-nav::backdrop {
+    transition: none !important;
+  }
 }
 
 @keyframes fade-in {
@@ -34,5 +85,39 @@ body {
 @media (prefers-reduced-motion: no-preference) {
   .animate-fade-in {
     animation: fade-in 200ms ease-out;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  .btn-secondary {
+    @apply border border-gray-300 bg-white text-gray-700 hover:bg-gray-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-ghost {
+    @apply text-gray-700 hover:bg-gray-100;
+  }
+
+  .card {
+    @apply rounded-lg border border-gray-200 bg-white shadow-sm;
+  }
+
+  .input {
+    @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500;
+  }
+
+  .label {
+    @apply mb-1 block text-sm font-medium text-gray-700;
+  }
+
+  .badge {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium;
   }
 }
