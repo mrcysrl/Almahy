@@ -17,7 +17,7 @@ export default async function DashboardPage({
     Object.entries(params).map(([key, value]) => [
       key,
       Array.isArray(value) ? value[0] : value,
-    ]),
+    ])
   );
 
   const defaultRange = getDefaultRange(db.orders);
@@ -47,26 +47,35 @@ export default async function DashboardPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Sales analytics for the selected date range.
+          </p>
+        </div>
         <DashboardDateRange />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded border border-gray-200 bg-white p-4"
-          >
-            <div className="text-sm text-gray-500">{kpi.label}</div>
-            <div className="mt-1 text-2xl font-semibold">{kpi.value}</div>
+          <div key={kpi.label} className="card p-4">
+            <div className="text-xs font-medium uppercase tracking-wide text-gray-500">
+              {kpi.label}
+            </div>
+            <div className="mt-2 text-2xl font-semibold tracking-tight">
+              {kpi.value}
+            </div>
           </div>
         ))}
       </div>
 
       {data.kpis.orderCount === 0 ? (
-        <div className="rounded border border-dashed border-gray-300 p-8 text-center text-gray-500">
-          No orders in this date range. Try widening the dates.
+        <div className="card border-dashed p-8 text-center">
+          <p className="font-medium text-gray-900">No orders in this range</p>
+          <p className="mt-1 text-sm text-gray-500">
+            Try widening the dates.
+          </p>
         </div>
       ) : (
         <SalesChart data={data.daily} />

@@ -12,8 +12,13 @@ export function SalesChart({ data }: { data: DailyPoint[] }) {
   const barW = data.length === 0 ? 0 : innerW / data.length;
 
   return (
-    <div className="rounded border border-gray-200 bg-white p-4">
-      <h2 className="mb-3 text-lg font-semibold">Revenue by day</h2>
+    <div className="card p-4 sm:p-6">
+      <div className="mb-4 flex items-baseline justify-between">
+        <h2 className="text-base font-semibold text-gray-900">
+          Revenue by day
+        </h2>
+        <span className="text-xs text-gray-500">Last {data.length} days</span>
+      </div>
 
       <svg
         viewBox={`0 0 ${width} ${height}`}
