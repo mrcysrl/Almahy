@@ -9,3 +9,13 @@ export const formatDate = (iso: string): string =>
     year: "numeric",
     timeZone: "UTC",
   });
+
+export const formatDateTime = (iso: string): string =>
+  `${new Date(iso).toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  })} UTC`;
