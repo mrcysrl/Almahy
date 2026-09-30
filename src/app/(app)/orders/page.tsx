@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/auth/session";
 import { orderQuerySchema, queryOrders } from "@/lib/orders/query";
@@ -37,7 +38,17 @@ export default async function OrdersPage({
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Orders</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Orders</h1>
+        {user?.role === "admin" && (
+          <Link
+            href="/orders/new"
+            className="rounded bg-black px-3 py-2 text-sm text-white"
+          >
+            New order
+          </Link>
+        )}
+      </div>
 
       <OrdersFilters />
 

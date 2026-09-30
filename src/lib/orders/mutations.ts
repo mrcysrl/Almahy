@@ -36,7 +36,8 @@ export function createOrder(input: CreateOrderInput, actor: User): Order {
     customerName: input.customerName,
     customerEmail: input.customerEmail,
     shippingAddress: input.shippingAddress,
-    notes: input.notes,
+    notes: input.notes || undefined,
+    giftMessage: input.isGift ? input.giftMessage : undefined,
     status: "pending",
     items,
     // never trust a client-supplied total

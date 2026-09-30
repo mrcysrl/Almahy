@@ -43,6 +43,10 @@ export default async function OrderDetailPage({
           Created {formatDate(order.createdAt)}
         </p>
 
+        {order.giftMessage && (
+          <p className="text-sm">Gift message: {order.giftMessage}</p>
+        )}
+
         <StatusControl
           orderId={order.id}
           status={order.status}

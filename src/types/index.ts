@@ -31,6 +31,7 @@ export type Order = {
   totalCents: number;
   shippingAddress: string;
   notes?: string;
+  giftMessage?: string;
   createdAt: string;
   updatedAt: string;
 };
