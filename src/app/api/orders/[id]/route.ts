@@ -1,14 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { authorize } from "@/lib/auth/guard";
+
 import { db } from "@/lib/db";
+
 import { deleteOrder, updateOrder } from "@/lib/orders/mutations";
+
 import { updateOrderSchema } from "@/lib/orders/schemas";
+
+import { canTransition } from "@/lib/orders/transitions";
 
 type Context = { params: Promise<{ id: string }> };
 
 export async function GET(_req: NextRequest, { params }: Context) {
   const auth = await authorize();
+
   if (auth.response) return auth.response;
 
   const { id } = await params;
@@ -31,6 +37,7 @@ export async function GET(_req: NextRequest, { params }: Context) {
 
 export async function PATCH(request: NextRequest, { params }: Context) {
   const auth = await authorize();
+
   if (auth.response) return auth.response;
 
   const { id } = await params;
@@ -56,6 +63,28 @@ export async function PATCH(request: NextRequest, { params }: Context) {
     );
   }
 
+  const current = db.orders.find((o) => o.id === id);
+
+  if (!current) {
+    return NextResponse.json(
+      { error: "Order not found" },
+      { status: 404 },
+    );
+  }
+
+  if (
+    parsed.data.status &&
+    parsed.data.status !== current.status &&
+    !canTransition(current.status, parsed.data.status)
+  ) {
+    return NextResponse.json(
+      {
+        error: `Cannot change status from ${current.status} to ${parsed.data.status}`,
+      },
+      { status: 409 },
+    );
+  }
+
   const order = updateOrder(id, parsed.data, auth.user);
 
   if (!order) {
@@ -70,6 +99,7 @@ export async function PATCH(request: NextRequest, { params }: Context) {
 
 export async function DELETE(_req: NextRequest, { params }: Context) {
   const auth = await authorize("admin");
+
   if (auth.response) return auth.response;
 
   const { id } = await params;

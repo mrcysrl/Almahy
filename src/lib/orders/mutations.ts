@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import type { FieldChange, Order, OrderEvent, User } from "@/types";
 import type { BulkInput, CreateOrderInput, UpdateOrderInput } from "./schemas";
+import { canTransition } from "./transitions";
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
   ? Omit<T, K>
@@ -71,14 +72,10 @@ export function updateOrder(
 
   for (const field of EDITABLE_FIELDS) {
     const next = input[field];
+    const current = order[field] ?? "";
 
-    if (next !== undefined && next !== order[field]) {
-      changes.push({
-        field,
-        from: String(order[field] ?? ""),
-        to: next,
-      });
-
+    if (next !== undefined && next !== current) {
+      changes.push({ field, from: current, to: next });
       order[field] = next;
     }
   }
@@ -124,10 +121,18 @@ export function bulkApply(
   let affected = 0;
 
   for (const id of input.ids) {
-    const ok =
-      input.action === "delete"
-        ? deleteOrder(id)
-        : updateOrder(id, { status: input.status }, actor) !== null;
+    let ok: boolean;
+
+    if (input.action === "delete") {
+      ok = deleteOrder(id);
+    } else {
+      const order = db.orders.find((o) => o.id === id);
+
+      ok =
+        order !== undefined &&
+        canTransition(order.status, input.status) &&
+        updateOrder(id, { status: input.status }, actor) !== null;
+    }
 
     if (ok) affected++;
     else missing.push(id);

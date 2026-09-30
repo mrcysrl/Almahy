@@ -15,16 +15,21 @@ export const createOrderSchema = z.object({
   items: z.array(itemSchema).min(1).max(20),
 });
 
+const customerFields = {
+  customerName: z.string().trim().min(1, "Name is required").max(100),
+  customerEmail: z.string().trim().email("Enter a valid email"),
+  shippingAddress: z.string().trim().min(5, "Address is too short").max(200),
+  notes: z.string().trim().max(500, "Notes are too long"),
+};
+
+export const customerEditSchema = z.object(customerFields);
+
 export const updateOrderSchema = z
-  .object({
-    status: z.enum(ORDER_STATUSES),
-    customerName: z.string().trim().min(1).max(100),
-    customerEmail: z.string().trim().email(),
-    shippingAddress: z.string().trim().min(5).max(200),
-    notes: z.string().trim().max(500),
-  })
+  .object({ status: z.enum(ORDER_STATUSES), ...customerFields })
   .partial()
-  .refine((v) => Object.keys(v).length > 0, { message: "No fields to update" });
+  .refine((v) => Object.keys(v).length > 0, {
+    message: "No fields to update",
+  });
 
 const idList = z.array(z.string().min(1)).min(1).max(50);
 
