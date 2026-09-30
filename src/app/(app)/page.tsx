@@ -17,7 +17,7 @@ export default async function DashboardPage({
     Object.entries(params).map(([key, value]) => [
       key,
       Array.isArray(value) ? value[0] : value,
-    ])
+    ]),
   );
 
   const defaultRange = getDefaultRange(db.orders);
@@ -64,7 +64,13 @@ export default async function DashboardPage({
         ))}
       </div>
 
-      <SalesChart data={data.daily} />
+      {data.kpis.orderCount === 0 ? (
+        <div className="rounded border border-dashed border-gray-300 p-8 text-center text-gray-500">
+          No orders in this date range. Try widening the dates.
+        </div>
+      ) : (
+        <SalesChart data={data.daily} />
+      )}
     </div>
   );
 }
