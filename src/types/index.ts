@@ -46,7 +46,7 @@ type OrderEventBase = {
   orderId: string;
   actorId: string;
   actorName: string;
-  createdAt: string; // ISO 8601 UTC
+  createdAt: string;
 };
 
 export type OrderEvent = OrderEventBase &
