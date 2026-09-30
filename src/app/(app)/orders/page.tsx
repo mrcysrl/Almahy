@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getSession } from "@/lib/auth/session";
 import { orderQuerySchema, queryOrders } from "@/lib/orders/query";
 import { buildOrdersHref } from "@/lib/orders/url";
 import { OrdersTable } from "@/components/orders/orders-table";
@@ -32,13 +33,20 @@ export default async function OrdersPage({
     redirect(buildOrdersHref(query, { page: result.totalPages }));
   }
 
+  const user = await getSession();
+
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Orders</h1>
 
       <OrdersFilters />
 
-      <OrdersTable orders={result.data} query={query} />
+      <OrdersTable
+        key={JSON.stringify(query)}
+        orders={result.data}
+        query={query}
+        canManage={user?.role === "admin"}
+      />
 
       <Pagination
         query={query}
