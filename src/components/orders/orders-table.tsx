@@ -7,6 +7,7 @@ import type { Order, OrderStatus } from "@/types";
 import { ORDER_STATUSES, type OrderQuery } from "@/lib/orders/query";
 import { buildOrdersHref } from "@/lib/orders/url";
 import { formatCents, formatDate } from "@/lib/format";
+import { STATUS_BADGE } from "@/lib/status-colors";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 
 type SortKey = OrderQuery["sort"];
@@ -36,7 +37,7 @@ function SortableTh({
             : "descending"
           : "none"
       }
-      className="px-3 py-2 text-left"
+      className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
     >
       <Link
         href={buildOrdersHref(query, {
@@ -44,11 +45,20 @@ function SortableTh({
           order: nextOrder,
           page: 1,
         })}
+        className="hover:text-gray-900"
       >
         {label}
         {active ? (query.order === "asc" ? " ▲" : " ▼") : ""}
       </Link>
     </th>
+  );
+}
+
+function StatusBadge({ status }: { status: OrderStatus }) {
+  return (
+    <span className={`badge ${STATUS_BADGE[status]} capitalize`}>
+      {status}
+    </span>
   );
 }
 
@@ -164,10 +174,10 @@ export function OrdersTable({ orders, query, canManage }: Props) {
 
   if (orders.length === 0) {
     return (
-      <div className="rounded border border-dashed p-8 text-center">
-        <p className="font-medium">No orders match your filters</p>
+      <div className="card border-dashed p-8 text-center">
+        <p className="font-medium text-gray-900">No orders match your filters</p>
 
-        <Link href="/orders" className="text-sm underline">
+        <Link href="/orders" className="mt-2 inline-block text-sm text-blue-600 hover:underline">
           Clear filters
         </Link>
       </div>
@@ -192,13 +202,20 @@ export function OrdersTable({ orders, query, canManage }: Props) {
 
   return (
     <div className="space-y-3">
-      <p role="status" className="min-h-5 text-sm text-green-700">
-        {notice}
-      </p>
+      {notice && (
+        <p
+          role="status"
+          className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
+        >
+          {notice}
+        </p>
+      )}
 
       {canManage && someSelected && (
-        <div className="flex flex-wrap items-center gap-3 rounded border bg-gray-50 p-3 text-sm">
-          <span>{selected.size} selected</span>
+        <div className="card flex flex-wrap items-center gap-3 p-3 text-sm">
+          <span className="font-medium">
+            {selected.size} selected
+          </span>
 
           <label htmlFor="bulk-status" className="sr-only">
             New status
@@ -210,7 +227,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
             onChange={(e) =>
               setStatusChoice(e.target.value as OrderStatus | "")
             }
-            className="rounded border border-gray-300 px-2 py-1 capitalize"
+            className="input w-auto capitalize"
           >
             <option value="">Set status...</option>
 
@@ -234,7 +251,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
                 });
               }
             }}
-            className="rounded border px-3 py-1 disabled:opacity-50"
+            className="btn btn-secondary"
           >
             Apply
           </button>
@@ -245,32 +262,37 @@ export function OrdersTable({ orders, query, canManage }: Props) {
               setNotice(null);
               setAction({ kind: "delete" });
             }}
-            className="rounded border border-red-300 px-3 py-1 text-red-700"
+            className="btn btn-danger"
           >
             Delete
           </button>
         </div>
       )}
 
-      <div className="overflow-x-auto">
+      {/* Desktop: table */}
+      <div className="card hidden overflow-hidden md:block">
         <table className="w-full text-sm">
           <caption className="sr-only">Orders</caption>
 
-          <thead className="border-b">
+          <thead className="border-b border-gray-200 bg-gray-50">
             <tr>
               {canManage && (
-                <th scope="col" className="w-10 px-3 py-2">
+                <th scope="col" className="w-10 px-4 py-3">
                   <input
                     ref={selectAllRef}
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleAll}
                     aria-label="Select all orders on this page"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                 </th>
               )}
 
-              <th scope="col" className="px-3 py-2 text-left">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
+              >
                 Order
               </th>
 
@@ -280,7 +302,10 @@ export function OrdersTable({ orders, query, canManage }: Props) {
                 query={query}
               />
 
-              <th scope="col" className="px-3 py-2 text-left">
+              <th
+                scope="col"
+                className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-gray-500"
+              >
                 Status
               </th>
 
@@ -298,40 +323,44 @@ export function OrdersTable({ orders, query, canManage }: Props) {
             </tr>
           </thead>
 
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {orders.map((o) => (
               <tr
                 key={o.id}
-                className={`border-b ${
-                  selected.has(o.id) ? "bg-gray-50" : ""
-                }`}
+                className={selected.has(o.id) ? "bg-blue-50" : "hover:bg-gray-50"}
               >
                 {canManage && (
-                  <td className="px-3 py-2">
+                  <td className="px-4 py-3">
                     <input
                       type="checkbox"
                       checked={selected.has(o.id)}
                       onChange={() => toggle(o.id)}
                       aria-label={`Select order ${o.id}`}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
                   </td>
                 )}
 
-                <td className="px-3 py-2">
-                  <Link href={`/orders/${o.id}`} className="underline">
+                <td className="px-4 py-3">
+                  <Link
+                    href={`/orders/${o.id}`}
+                    className="font-medium text-blue-600 hover:underline"
+                  >
                     {o.id}
                   </Link>
                 </td>
 
-                <td className="px-3 py-2">{o.customerName}</td>
+                <td className="px-4 py-3 text-gray-900">{o.customerName}</td>
 
-                <td className="px-3 py-2 capitalize">{o.status}</td>
+                <td className="px-4 py-3">
+                  <StatusBadge status={o.status} />
+                </td>
 
-                <td className="px-3 py-2">
+                <td className="px-4 py-3 font-medium">
                   {formatCents(o.totalCents)}
                 </td>
 
-                <td className="px-3 py-2">
+                <td className="px-4 py-3 text-gray-500">
                   {formatDate(o.createdAt)}
                 </td>
               </tr>
@@ -339,6 +368,55 @@ export function OrdersTable({ orders, query, canManage }: Props) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile: card list */}
+      <ul className="card divide-y divide-gray-100 md:hidden">
+        {orders.map((o) => {
+          const isSelected = selected.has(o.id);
+
+          return (
+            <li
+              key={o.id}
+              className={isSelected ? "bg-blue-50" : ""}
+            >
+              <div className="flex items-start gap-3 p-4">
+                {canManage && (
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggle(o.id)}
+                    aria-label={`Select order ${o.id}`}
+                    className="mt-1 h-4 w-4 shrink-0 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                )}
+
+                <Link href={`/orders/${o.id}`} className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="truncate font-medium text-gray-900">
+                        {o.customerName}
+                      </div>
+                      <div className="mt-0.5 text-xs text-gray-500">
+                        {o.id}
+                      </div>
+                    </div>
+                    <StatusBadge status={o.status} />
+                  </div>
+
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-gray-500">
+                      {formatDate(o.createdAt)}
+                    </span>
+                    <span className="font-medium text-gray-900">
+                      {formatCents(o.totalCents)}
+                    </span>
+                  </div>
+                </Link>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
 
       <ConfirmDialog
         open={action !== null}

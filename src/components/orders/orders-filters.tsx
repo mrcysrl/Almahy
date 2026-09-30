@@ -25,7 +25,6 @@ export function OrdersFilters() {
   const [from, setFrom] = useState(urlFrom);
   const [to, setTo] = useState(urlTo);
 
-  // Keep local inputs in sync when the URL changes from outside (Back, "Clear filters")
   const [prev, setPrev] = useState({ q: urlQ, from: urlFrom, to: urlTo });
   if (prev.q !== urlQ || prev.from !== urlFrom || prev.to !== urlTo) {
     setPrev({ q: urlQ, from: urlFrom, to: urlTo });
@@ -37,7 +36,10 @@ export function OrdersFilters() {
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
-  function update(changes: Record<string, string>, mode: "push" | "replace" = "push") {
+  function update(
+    changes: Record<string, string>,
+    mode: "push" | "replace" = "push"
+  ) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(changes)) {
       if (value) params.set(key, value);
@@ -63,80 +65,83 @@ export function OrdersFilters() {
   }
 
   const hasFilters = Boolean(urlQ || status || urlFrom || urlTo);
-  const field = "mt-1 rounded border border-gray-300 px-3 py-2 text-sm";
 
   return (
     <div
       role="search"
       aria-label="Filter orders"
       aria-busy={isPending}
-      className={`flex flex-wrap items-end gap-3 ${isPending ? "opacity-70" : ""}`}
+      className={`card mb-4 p-3 sm:p-4 ${isPending ? "opacity-70" : ""}`}
     >
-      <div>
-        <label htmlFor="filter-q" className="block text-sm font-medium">
-          Search
-        </label>
-        <input
-          id="filter-q"
-          type="search"
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Order ID, name or email"
-          className={`${field} w-64`}
-        />
-      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-end">
+        <div className="sm:col-span-2 lg:col-span-1">
+          <label htmlFor="filter-q" className="label">
+            Search
+          </label>
+          <input
+            id="filter-q"
+            type="search"
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Order ID, name or email"
+            className="input"
+          />
+        </div>
 
-      <div>
-        <label htmlFor="filter-status" className="block text-sm font-medium">
-          Status
-        </label>
-        <select
-          id="filter-status"
-          value={status}
-          onChange={(e) => update({ status: e.target.value })}
-          className={`${field} capitalize`}
-        >
-          <option value="">All statuses</option>
-          {ORDER_STATUSES.map((s) => (
-            <option key={s} value={s} className="capitalize">
-              {s}
-            </option>
-          ))}
-        </select>
-      </div>
+        <div>
+          <label htmlFor="filter-status" className="label">
+            Status
+          </label>
+          <select
+            id="filter-status"
+            value={status}
+            onChange={(e) => update({ status: e.target.value })}
+            className="input capitalize"
+          >
+            <option value="">All statuses</option>
+            {ORDER_STATUSES.map((s) => (
+              <option key={s} value={s} className="capitalize">
+                {s}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      <div>
-        <label htmlFor="filter-from" className="block text-sm font-medium">
-          From
-        </label>
-        <input
-          id="filter-from"
-          type="date"
-          value={from}
-          max={to || undefined}
-          onChange={(e) => onDateChange("from", e.target.value)}
-          className={field}
-        />
-      </div>
+        <div>
+          <label htmlFor="filter-from" className="label">
+            From
+          </label>
+          <input
+            id="filter-from"
+            type="date"
+            value={from}
+            max={to || undefined}
+            onChange={(e) => onDateChange("from", e.target.value)}
+            className="input"
+          />
+        </div>
 
-      <div>
-        <label htmlFor="filter-to" className="block text-sm font-medium">
-          To
-        </label>
-        <input
-          id="filter-to"
-          type="date"
-          value={to}
-          min={from || undefined}
-          onChange={(e) => onDateChange("to", e.target.value)}
-          className={field}
-        />
+        <div>
+          <label htmlFor="filter-to" className="label">
+            To
+          </label>
+          <input
+            id="filter-to"
+            type="date"
+            value={to}
+            min={from || undefined}
+            onChange={(e) => onDateChange("to", e.target.value)}
+            className="input"
+          />
+        </div>
       </div>
 
       {hasFilters && (
-        <Link href="/orders" className="pb-2 text-sm underline">
-          Clear filters
-        </Link>
+        <div className="mt-3 border-t border-gray-100 pt-3">
+          <Link href="/orders" className="btn btn-ghost">
+            Clear filters
+          </Link>
+        </div>
       )}
     </div>
   );

@@ -13,7 +13,12 @@ type Fields = {
 type FieldErrors = Partial<Record<keyof Fields, string>>;
 type Issue = { path: ReadonlyArray<PropertyKey>; message: string };
 
-const FIELD_KEYS = ["customerName", "customerEmail", "shippingAddress", "notes"] as const;
+const FIELD_KEYS = [
+  "customerName",
+  "customerEmail",
+  "shippingAddress",
+  "notes",
+] as const;
 
 function toFieldErrors(issues: ReadonlyArray<Issue>): FieldErrors {
   const errors: FieldErrors = {};
@@ -34,7 +39,15 @@ type TextFieldProps = {
   onChange: (value: string) => void;
 };
 
-function TextField({ name, label, value, error, type = "text", multiline, onChange }: TextFieldProps) {
+function TextField({
+  name,
+  label,
+  value,
+  error,
+  type = "text",
+  multiline,
+  onChange,
+}: TextFieldProps) {
   const errorId = `${name}-error`;
   const shared = {
     id: name,
@@ -42,17 +55,26 @@ function TextField({ name, label, value, error, type = "text", multiline, onChan
     value,
     "aria-invalid": Boolean(error),
     "aria-describedby": error ? errorId : undefined,
-    className: "mt-1 w-full rounded border border-gray-300 px-3 py-2 text-sm",
+    className: `input ${error ? "border-red-400 focus:border-red-500 focus:ring-red-500" : ""}`,
   };
+
   return (
     <div>
-      <label htmlFor={name} className="block text-sm font-medium">
+      <label htmlFor={name} className="label">
         {label}
       </label>
       {multiline ? (
-        <textarea {...shared} rows={3} onChange={(e) => onChange(e.target.value)} />
+        <textarea
+          {...shared}
+          rows={3}
+          onChange={(e) => onChange(e.target.value)}
+        />
       ) : (
-        <input {...shared} type={type} onChange={(e) => onChange(e.target.value)} />
+        <input
+          {...shared}
+          type={type}
+          onChange={(e) => onChange(e.target.value)}
+        />
       )}
       {error && (
         <p id={errorId} className="mt-1 text-sm text-red-600">
@@ -109,7 +131,8 @@ export function CustomerSection({ orderId, initial, canEdit }: Props) {
           error?: string;
           issues?: Issue[];
         } | null;
-        if (res.status === 422 && data?.issues) setErrors(toFieldErrors(data.issues));
+        if (res.status === 422 && data?.issues)
+          setErrors(toFieldErrors(data.issues));
         else setFormError(data?.error ?? "Could not save changes.");
         return;
       }
@@ -124,50 +147,117 @@ export function CustomerSection({ orderId, initial, canEdit }: Props) {
   }
 
   return (
-    <section aria-labelledby="customer-heading">
-      <div className="mb-2 flex items-center justify-between">
-        <h2 id="customer-heading" className="text-lg font-semibold">
+    <section aria-labelledby="customer-heading" className="card p-4 sm:p-6">
+      <div className="flex items-center justify-between">
+        <h2
+          id="customer-heading"
+          className="text-base font-semibold text-gray-900"
+        >
           Customer
         </h2>
+
         {canEdit && !editing && (
-          <button type="button" onClick={startEditing} className="rounded border px-3 py-1 text-sm">
+          <button type="button" onClick={startEditing} className="btn btn-secondary">
             Edit
           </button>
         )}
       </div>
 
-      <p role="status" className="min-h-5 text-sm text-green-700">
-        {saved ? "Changes saved." : ""}
-      </p>
+      {saved && !editing && (
+        <p
+          role="status"
+          className="mt-3 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
+        >
+          Changes saved.
+        </p>
+      )}
 
       {editing ? (
-        <form onSubmit={onSubmit} noValidate className="max-w-md space-y-3">
-          <TextField name="customerName" label="Name" value={values.customerName} error={errors.customerName} onChange={(v) => set("customerName", v)} />
-          <TextField name="customerEmail" label="Email" type="email" value={values.customerEmail} error={errors.customerEmail} onChange={(v) => set("customerEmail", v)} />
-          <TextField name="shippingAddress" label="Shipping address" value={values.shippingAddress} error={errors.shippingAddress} onChange={(v) => set("shippingAddress", v)} />
-          <TextField name="notes" label="Notes" multiline value={values.notes} error={errors.notes} onChange={(v) => set("notes", v)} />
-          <p role="alert" className="min-h-5 text-sm text-red-600">
-            {formError}
-          </p>
+        <form onSubmit={onSubmit} noValidate className="mt-4 space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField
+              name="customerName"
+              label="Name"
+              value={values.customerName}
+              error={errors.customerName}
+              onChange={(v) => set("customerName", v)}
+            />
+            <TextField
+              name="customerEmail"
+              label="Email"
+              type="email"
+              value={values.customerEmail}
+              error={errors.customerEmail}
+              onChange={(v) => set("customerEmail", v)}
+            />
+          </div>
+
+          <TextField
+            name="shippingAddress"
+            label="Shipping address"
+            value={values.shippingAddress}
+            error={errors.shippingAddress}
+            onChange={(v) => set("shippingAddress", v)}
+          />
+
+          <TextField
+            name="notes"
+            label="Notes"
+            multiline
+            value={values.notes}
+            error={errors.notes}
+            onChange={(v) => set("notes", v)}
+          />
+
+          {formError && (
+            <p
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+            >
+              {formError}
+            </p>
+          )}
+
           <div className="flex gap-2">
-            <button type="submit" disabled={pending} className="rounded bg-black px-4 py-2 text-sm text-white disabled:opacity-60">
+            <button
+              type="submit"
+              disabled={pending}
+              className="btn btn-primary"
+            >
               {pending ? "Saving..." : "Save"}
             </button>
-            <button type="button" disabled={pending} onClick={() => setEditing(false)} className="rounded border px-4 py-2 text-sm disabled:opacity-60">
+            <button
+              type="button"
+              disabled={pending}
+              onClick={() => setEditing(false)}
+              className="btn btn-secondary"
+            >
               Cancel
             </button>
           </div>
         </form>
       ) : (
-        <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-sm">
-          <dt className="text-gray-600">Name</dt>
-          <dd>{initial.customerName}</dd>
-          <dt className="text-gray-600">Email</dt>
-          <dd>{initial.customerEmail}</dd>
-          <dt className="text-gray-600">Shipping address</dt>
-          <dd>{initial.shippingAddress}</dd>
-          <dt className="text-gray-600">Notes</dt>
-          <dd>{initial.notes || "None"}</dd>
+        <dl className="mt-4 grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-gray-500">Name</dt>
+            <dd className="mt-0.5 font-medium text-gray-900">
+              {initial.customerName}
+            </dd>
+          </div>
+          <div>
+            <dt className="text-gray-500">Email</dt>
+            <dd className="mt-0.5 text-gray-900">{initial.customerEmail}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-gray-500">Shipping address</dt>
+            <dd className="mt-0.5 text-gray-900">{initial.shippingAddress}</dd>
+          </div>
+          <div className="sm:col-span-2">
+            <dt className="text-gray-500">Notes</dt>
+            <dd className="mt-0.5 whitespace-pre-wrap text-gray-900">
+              {initial.notes || "—"}
+            </dd>
+          </div>
         </dl>
       )}
     </section>
