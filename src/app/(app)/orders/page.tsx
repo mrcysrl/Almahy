@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { orderQuerySchema, queryOrders } from "@/lib/orders/query";
 import { buildOrdersHref } from "@/lib/orders/url";
 import { OrdersTable } from "@/components/orders/orders-table";
+import { OrdersFilters } from "@/components/orders/orders-filters";
 import { Pagination } from "@/components/orders/pagination";
 
 type SearchParams = Record<string, string | string[] | undefined>;
@@ -34,6 +35,8 @@ export default async function OrdersPage({
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-semibold">Orders</h1>
+
+      <OrdersFilters />
 
       <OrdersTable orders={result.data} query={query} />
 
