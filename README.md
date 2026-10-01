@@ -41,12 +41,13 @@ Demo credentials only. They are hardcoded in `src/lib/auth/credentials.ts` and s
 
 ### Dashboard
 
-- Four KPIs: revenue, orders, average order value, pending orders.
-- Revenue and the order count include every order that is not cancelled, which means pending (unpaid) orders are included. Pending orders are also shown as their own KPI.
+- Four KPIs: revenue, paid orders, average order value, pending orders.
+- Revenue counts orders that have been paid (paid, processing, shipped, delivered). Pending and cancelled orders are excluded from revenue, and pending orders are shown as their own KPI.
 - Revenue-by-day chart rendered as inline SVG in a Server Component (no chart library, no client JavaScript), with a visually hidden data table as a text alternative.
 - URL-synchronized date-range filter: shareable and preserved on reload.
+- Invalid, reversed, or oversized ranges (366 days or more) fall back to the default range instead of erroring.
 - The default range is the 30 days ending at the most recent order, so the seeded data always shows something.
-- Route-level loading skeleton and an empty state.
+- Loading skeleton and empty state.
 
 ### Orders (Management module)
 
@@ -79,10 +80,11 @@ Demo credentials only. They are hardcoded in `src/lib/auth/credentials.ts` and s
 ### Auth and access control
 
 - JWT in an HttpOnly, SameSite=Lax cookie (Secure in production), signed with `AUTH_SECRET` via `jose`, 8-hour expiry.
-- Roles: `admin` and `support`. Enforced on the server in every protected API route handler (`authorize()` in `src/lib/auth/guard.ts`). The UI also hides what a role cannot do, but the UI is not the security boundary.
-- Route protection:
-  - `src/proxy.ts` redirects requests with no session cookie to `/login`. This is an optimistic check only: it tests that a cookie exists, not that it is valid.
-  - The `(app)` layout verifies the session and redirects to `/login` if it is missing or invalid. See [Known issues](#known-issues) for the limits of this approach.
+- Roles: `admin` and `support`. Enforced on the server in every protected route handler (`authorize()` in `src/lib/auth/guard.ts`). The UI also hides what a role cannot do, but the UI is not the security boundary.
+- Route protection in layers:
+  - `src/proxy.ts` redirects requests with no session cookie to `/login`. This is an optimistic check only, not a verification.
+  - Each protected page calls `requireUser()`, which verifies the JWT, so protection does not depend on the layout re-rendering.
+  - The `(app)` layout also verifies the session.
 - The user's role is re-read from server data on every request, never trusted from the token.
 - Passwords are hashed with bcrypt at startup. Login always runs a hash comparison so response time does not reveal whether an email exists. Plaintext is never sent to the client.
 
@@ -91,6 +93,7 @@ Demo credentials only. They are hardcoded in `src/lib/auth/credentials.ts` and s
 - Responsive layout with a mobile navigation drawer.
 - Native `<dialog>` for the mobile drawer and the confirmation modal: Escape to close, page content inert while open, focus returned on close.
 - Keyboard navigation: skip-to-content link, visible focus rings, labelled form fields, `aria-sort` on sortable columns, `aria-invalid` and `aria-describedby` on invalid inputs.
+- Status messages use live regions (`role="status"` and `role="alert"`).
 - Fade-in step transition respects `prefers-reduced-motion`.
 - Light theme only.
 
@@ -219,7 +222,7 @@ Allowed status transitions (`src/lib/orders/transitions.ts`):
 | 5  | API & State | REST handlers in `app/api/orders/`, `lib/orders/mutations.ts`. Optimistic update with rollback in `status-control.tsx`. After mutations, data is revalidated with `router.refresh()`; there is no separate client cache layer. |
 | 6  | UI/UX       | Skip link and mobile drawer (`(app)/layout.tsx`, `components/mobile-nav.tsx`), route skeleton (`(app)/loading.tsx`), empty states on dashboard and orders, inline field errors and error banners in forms |
 | 7  | Performance | Server-side filtering and pagination, debounced inputs, `useTransition` for pending UI, Server Components read data directly (no self-fetch), chart rendered server-side so it ships no JavaScript |
-| 8  | Security    | JWT HttpOnly cookie, `authorize()` on every API route, session check in the `(app)` layout, Zod on all inputs, `AUTH_SECRET` from env, no secrets in Git. See Known issues. |
+| 8  | Security    | See Auth and access control above: JWT HttpOnly cookie, `authorize()` on every API route, `requireUser()` on pages, Zod on all inputs, `AUTH_SECRET` from env, no secrets in Git |
 | 9  | Engineering | Layered `lib/` (auth, orders, dashboard), shared types, strict TypeScript, conventional-style commits, Vitest for dashboard data logic |
 | 10 | Deployment  | Vercel deployment, env documented above |
 
@@ -231,20 +234,9 @@ Allowed status transitions (`src/lib/orders/transitions.ts`):
 npm test
 ```
 
-Vitest unit tests cover the dashboard data logic.
+Vitest unit tests cover the dashboard data logic: default range, range validation and fallback, revenue rules (cancelled and pending excluded), boundary days, and the zero-filled daily series.
 
 Not covered by automated tests: the orders query logic, transition rules, the create-order schema, and the UI components. They were verified manually, including the full create-order flow, bulk actions, and role restrictions.
-
----
-
-## Known issues
-
-Found during self-review after submission. None of these is fixed in this branch.
-
-1. **Dashboard date range is not fully validated.** The page only checks that `from` and `to` are 10 characters long. A 10-character value that is not a real date (for example `/?from=abcdefghij&to=abcdefghij`) can cause a server error, and a very large range is not capped, so it can be slow. A correct version validates the format, rejects impossible dates, and falls back to the default range.
-2. **Date inputs update the URL on partial input.** Typing a year digit by digit in a native date input briefly produces values like `0002-08-20`, and each one is written to the URL and the browser history. The orders filters guard against this; the dashboard filter does not.
-3. **Session verification lives in the `(app)` layout.** Next.js layouts are not re-rendered on every client-side navigation, so pages should verify the session themselves, and they do not yet. API route handlers always verify the session, so data cannot be read or changed through the API without a valid one.
-4. **Revenue includes pending orders.** Counting unpaid orders as revenue is a questionable definition. Excluding them is a one-filter change in `lib/dashboard.ts`.
 
 ---
 
@@ -254,7 +246,7 @@ Found during self-review after submission. None of these is fixed in this branch
 - **Hardcoded demo users**: for the assessment only. In production these belong in a database or identity provider.
 - **No login rate limiting or CSRF tokens**: the session cookie is SameSite=Lax, and mutations are JSON requests. A production system would add rate limiting and further CSRF protection.
 - **Deleting an order deletes its history**: a real system would soft-delete and keep an audit trail.
-- **No route-level error boundary (`error.tsx`)**: API handlers return structured errors and forms show inline error states, but an uncaught server error shows the framework default.
+- **No route-level error boundary (`error.tsx`)**: handlers return structured errors and forms show inline error states, but an uncaught server error shows the framework default.
 - **No OAuth, no E2E suite, no dark theme, no real-time updates**: traded for a coherent vertical slice within the assessment budget. Other tabs see changes only after navigating or refreshing.
 - **No images**: `next/image` and image lazy loading are not applicable to this app.
 
@@ -278,7 +270,8 @@ Found during self-review after submission. None of these is fixed in this branch
 2. Log in as **support**: no bulk actions, no customer edit, no create page.
 3. `/orders?page=999` redirects to the last valid page.
 4. `/orders?status=shipped&from=2026-09-01` survives reload and Back.
-5. `/orders/new`: multi-step form, autosave survives refresh, server validation surfaces field errors on the correct step.
-6. `/orders/[id]`: edit the customer, change the status, watch the timeline update.
+5. `/?from=abcdefghij` shows the default dashboard instead of an error.
+6. `/orders/new`: multi-step form, autosave survives refresh, server validation surfaces field errors on the correct step.
+7. `/orders/[id]`: edit the customer, change the status, watch the timeline update.
 
-> Steps 5 and 6 involve writes. To see them persist reliably, run locally.
+> Steps 6 and 7 involve writes. To see them persist reliably, run locally.
