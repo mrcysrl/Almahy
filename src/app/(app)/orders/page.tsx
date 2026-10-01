@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/require-user";
 import { orderQuerySchema, queryOrders } from "@/lib/orders/query";
 import { buildOrdersHref } from "@/lib/orders/url";
 import { OrdersTable } from "@/components/orders/orders-table";
@@ -34,7 +34,7 @@ export default async function OrdersPage({
     redirect(buildOrdersHref(query, { page: result.totalPages }));
   }
 
-  const user = await getSession();
+  const user = await requireUser();
 
   return (
     <div className="space-y-4">

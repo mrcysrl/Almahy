@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
-import { getSession } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/require-user";
 import { formatCents, formatDate } from "@/lib/format";
 import { STATUS_BADGE } from "@/lib/status-colors";
 import { OrderTimeline } from "@/components/orders/order-timeline";
@@ -23,12 +23,10 @@ export default async function OrderDetailPage({
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
   const related = db.orders
-    .filter(
-      (o) => o.customerEmail === order.customerEmail && o.id !== order.id
-    )
+    .filter((o) => o.customerEmail === order.customerEmail && o.id !== order.id)
     .slice(0, 5);
 
-  const user = await getSession();
+  const user = await requireUser();
 
   return (
     <div className="space-y-6">
@@ -75,7 +73,7 @@ export default async function OrderDetailPage({
       {/* Customer */}
       <CustomerSection
         orderId={order.id}
-        canEdit={user?.role === "admin"}
+        canEdit={user.role === "admin"}
         initial={{
           customerName: order.customerName,
           customerEmail: order.customerEmail,
@@ -199,7 +197,9 @@ export default async function OrderDetailPage({
                 </Link>
 
                 <div className="flex items-center gap-3">
-                  <span className={`badge ${STATUS_BADGE[o.status]} capitalize`}>
+                  <span
+                    className={`badge ${STATUS_BADGE[o.status]} capitalize`}
+                  >
                     {o.status}
                   </span>
                   <span className="text-gray-500">
