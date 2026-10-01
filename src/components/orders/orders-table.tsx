@@ -103,9 +103,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
   }
 
   function toggleAll() {
-    setSelected(
-      allSelected ? new Set() : new Set(orders.map((o) => o.id)),
-    );
+    setSelected(allSelected ? new Set() : new Set(orders.map((o) => o.id)));
   }
 
   function closeDialog() {
@@ -177,7 +175,10 @@ export function OrdersTable({ orders, query, canManage }: Props) {
       <div className="card border-dashed p-8 text-center">
         <p className="font-medium text-gray-900">No orders match your filters</p>
 
-        <Link href="/orders" className="mt-2 inline-block text-sm text-blue-600 hover:underline">
+        <Link
+          href="/orders"
+          className="mt-2 inline-block text-sm text-blue-600 hover:underline"
+        >
           Clear filters
         </Link>
       </div>
@@ -202,20 +203,21 @@ export function OrdersTable({ orders, query, canManage }: Props) {
 
   return (
     <div className="space-y-3">
-      {notice && (
-        <p
-          role="status"
-          className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
-        >
-          {notice}
-        </p>
-      )}
+      {/* Always rendered so screen readers announce text changes inside it */}
+      <p
+        role="status"
+        className={
+          notice
+            ? "rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800"
+            : "sr-only"
+        }
+      >
+        {notice}
+      </p>
 
       {canManage && someSelected && (
         <div className="card flex flex-wrap items-center gap-3 p-3 text-sm">
-          <span className="font-medium">
-            {selected.size} selected
-          </span>
+          <span className="font-medium">{selected.size} selected</span>
 
           <label htmlFor="bulk-status" className="sr-only">
             New status
@@ -296,11 +298,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
                 Order
               </th>
 
-              <SortableTh
-                label="Customer"
-                column="customerName"
-                query={query}
-              />
+              <SortableTh label="Customer" column="customerName" query={query} />
 
               <th
                 scope="col"
@@ -309,17 +307,9 @@ export function OrdersTable({ orders, query, canManage }: Props) {
                 Status
               </th>
 
-              <SortableTh
-                label="Total"
-                column="totalCents"
-                query={query}
-              />
+              <SortableTh label="Total" column="totalCents" query={query} />
 
-              <SortableTh
-                label="Created"
-                column="createdAt"
-                query={query}
-              />
+              <SortableTh label="Created" column="createdAt" query={query} />
             </tr>
           </thead>
 
@@ -375,10 +365,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
           const isSelected = selected.has(o.id);
 
           return (
-            <li
-              key={o.id}
-              className={isSelected ? "bg-blue-50" : ""}
-            >
+            <li key={o.id} className={isSelected ? "bg-blue-50" : ""}>
               <div className="flex items-start gap-3 p-4">
                 {canManage && (
                   <input
@@ -396,9 +383,7 @@ export function OrdersTable({ orders, query, canManage }: Props) {
                       <div className="truncate font-medium text-gray-900">
                         {o.customerName}
                       </div>
-                      <div className="mt-0.5 text-xs text-gray-500">
-                        {o.id}
-                      </div>
+                      <div className="mt-0.5 text-xs text-gray-500">{o.id}</div>
                     </div>
                     <StatusBadge status={o.status} />
                   </div>
