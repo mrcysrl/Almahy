@@ -6,10 +6,11 @@ export function SalesChart({ data }: { data: DailyPoint[] }) {
 
   const width = 720;
   const height = 220;
-  const padding = { top: 16, right: 16, bottom: 32, left: 48 };
+  const padding = { top: 16, right: 16, bottom: 32, left: 64 };
   const innerW = width - padding.left - padding.right;
   const innerH = height - padding.top - padding.bottom;
   const barW = data.length === 0 ? 0 : innerW / data.length;
+  const gap = barW > 8 ? 4 : 0;
 
   return (
     <div className="card p-4 sm:p-6">
@@ -17,7 +18,7 @@ export function SalesChart({ data }: { data: DailyPoint[] }) {
         <h2 className="text-base font-semibold text-gray-900">
           Revenue by day
         </h2>
-        <span className="text-xs text-gray-500">Last {data.length} days</span>
+        <span className="text-xs text-gray-500">{data.length} days</span>
       </div>
 
       <svg
@@ -34,6 +35,23 @@ export function SalesChart({ data }: { data: DailyPoint[] }) {
           stroke="#e5e7eb"
         />
 
+        <text
+          x={padding.left - 8}
+          y={padding.top + 4}
+          textAnchor="end"
+          className="fill-gray-500 text-[10px]"
+        >
+          {formatCents(max)}
+        </text>
+        <text
+          x={padding.left - 8}
+          y={padding.top + innerH}
+          textAnchor="end"
+          className="fill-gray-500 text-[10px]"
+        >
+          $0
+        </text>
+
         {data.map((d, i) => {
           const h = (d.revenueCents / max) * innerH;
           const x = padding.left + i * barW;
@@ -42,9 +60,9 @@ export function SalesChart({ data }: { data: DailyPoint[] }) {
           return (
             <g key={d.date}>
               <rect
-                x={x + 2}
+                x={x + gap / 2}
                 y={y}
-                width={Math.max(1, barW - 4)}
+                width={Math.max(1, barW - gap)}
                 height={h}
                 fill="#2563eb"
                 rx={2}

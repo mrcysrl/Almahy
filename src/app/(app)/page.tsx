@@ -1,6 +1,11 @@
 import { db } from "@/lib/db";
-import { getDashboardData, getDefaultRange } from "@/lib/dashboard";
+import {
+  getDashboardData,
+  getDefaultRange,
+  resolveRange,
+} from "@/lib/dashboard";
 import { formatCents } from "@/lib/format";
+import { requireUser } from "@/lib/auth/require-user";
 import { DashboardDateRange } from "@/components/dashboard/date-range-filter";
 import { SalesChart } from "@/components/dashboard/sales-chart";
 
@@ -11,33 +16,23 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  await requireUser();
+
   const params = await searchParams;
 
   const flat = Object.fromEntries(
     Object.entries(params).map(([key, value]) => [
       key,
       Array.isArray(value) ? value[0] : value,
-    ])
+    ]),
   );
 
-  const defaultRange = getDefaultRange(db.orders);
-
-  const from =
-    typeof flat.from === "string" && flat.from.length === 10
-      ? flat.from
-      : defaultRange.from;
-
-  const to =
-    typeof flat.to === "string" && flat.to.length === 10
-      ? flat.to
-      : defaultRange.to;
-
-  const range = from <= to ? { from, to } : defaultRange;
+  const range = resolveRange(flat.from, flat.to, getDefaultRange(db.orders));
   const data = getDashboardData(db.orders, range);
 
   const kpis = [
     { label: "Revenue", value: formatCents(data.kpis.revenueCents) },
-    { label: "Orders", value: String(data.kpis.orderCount) },
+    { label: "Paid orders", value: String(data.kpis.orderCount) },
     {
       label: "Avg order value",
       value: formatCents(data.kpis.avgOrderValueCents),
@@ -51,7 +46,7 @@ export default async function DashboardPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="mt-1 text-sm text-gray-500">
-            Sales analytics for the selected date range.
+            Sales analytics from {range.from} to {range.to}.
           </p>
         </div>
         <DashboardDateRange />
@@ -72,9 +67,9 @@ export default async function DashboardPage({
 
       {data.kpis.orderCount === 0 ? (
         <div className="card border-dashed p-8 text-center">
-          <p className="font-medium text-gray-900">No orders in this range</p>
+          <p className="font-medium text-gray-900">No paid orders in this range</p>
           <p className="mt-1 text-sm text-gray-500">
-            Try widening the dates.
+            Try widening the dates. Pending and cancelled orders are not counted as revenue.
           </p>
         </div>
       ) : (
